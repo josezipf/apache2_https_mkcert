@@ -1,13 +1,10 @@
 galaxy_info:
-  role_name: apache2-https
+  role_name: apache2-https  # ← Deve bater EXATAMENTE com o nome no Galaxy
+  github_repo: ansible-role-apache2-https  # ← Adicione esta linha (sem .git)
   author: josezipf
   description: Configura HTTPS para Apache com Mkcert
-  company: ""
   license: MIT
   min_ansible_version: "2.9"
   platforms:
     - name: Ubuntu
-      versions:
-        - noble
-
-dependencies: []
+      versions: [ "noble" ]
