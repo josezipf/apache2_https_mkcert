@@ -1,0 +1,14 @@
+<VirtualHost *:443>
+    ServerAdmin admin@{{ domain_name }}
+    ServerName {{ server_name }}
+    ServerAlias grafana.{{ domain_name }}
+    
+    DocumentRoot /usr/share/zabbix
+
+    SSLEngine on
+    SSLCertificateFile {{ cert_path }}/{{ domain_name }}.crt
+    SSLCertificateKeyFile {{ key_path }}/{{ domain_name }}.key
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>

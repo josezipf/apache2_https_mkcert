@@ -1,0 +1,9 @@
+---
+# Teste de role zabbix_https_apache
+- name: Testa aplicação da role
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Dummy task
+      ansible.builtin.debug:
+        msg: "Testando role"

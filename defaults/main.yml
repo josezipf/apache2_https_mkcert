@@ -1,0 +1,7 @@
+---
+mkcert_version: "1.4.4"
+cert_path: "/etc/ssl/certs"
+key_path: "/etc/ssl/private"
+mkcert_bin_path: "/usr/local/bin/mkcert"
+domain_name: "noto.local"          # onde vai o certificado
+server_name: "zabbix.noto.local"    # onde vai o ServerName do apache

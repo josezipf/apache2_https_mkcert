@@ -1,0 +1,92 @@
+---
+# Verificar se SO é compatível
+- name: Validar sistema compatível (Ubuntu/Debian)
+  ansible.builtin.fail:
+    msg: "Sistema não suportado - Role específica para Ubuntu/Debian"
+  when: >
+    ansible_distribution not in ['Ubuntu', 'Debian'] or
+    ansible_pkg_mgr != 'apt'
+  tags: always
+
+# Instala dependência necessária para mkcert funcionar corretamente
+- name: Instalar libnss3-tools (dependência para mkcert)
+  ansible.builtin.apt:
+    name: libnss3-tools
+    state: present
+    update_cache: true
+  tags: [certificates, mkcert]
+
+# Baixa o binário do mkcert diretamente da URL do GitHub (e torna executável)
+- name: Baixar mkcert (se ainda não estiver presente)
+  ansible.builtin.get_url:
+    url: "https://github.com/FiloSottile/mkcert/releases/download/v{{ mkcert_version }}/mkcert-v{{ mkcert_version }}-linux-amd64"
+    dest: "{{ mkcert_bin_path }}"
+    mode: '0755'
+    force: false  # evita sobrescrever se já existir
+  tags: [certificates, mkcert]
+
+# Instala a autoridade certificadora local (somente se ainda não foi criada)
+- name: Criar CA local (mkcert -install) se ainda não existir
+  ansible.builtin.command: "{{ mkcert_bin_path }} -install"
+  args:
+    creates: "/root/.local/share/mkcert/rootCA.pem"
+  tags: [certificates, mkcert]
+
+# Gera os certificados apenas se ainda não existirem
+- name: Gerar certificados para domínios (com mkcert)
+  ansible.builtin.command: >
+    {{ mkcert_bin_path }} -cert-file {{ cert_path }}/{{ domain_name }}.crt
+    -key-file {{ key_path }}/{{ domain_name }}.key
+    "{{ domain_name }}"
+    "grafana.{{ domain_name }}"
+    "zabbix.{{ domain_name }}"
+  args:
+    creates: "{{ cert_path }}/{{ domain_name }}.crt"
+  tags: [certificates, mkcert]
+
+# Configuração do Apache
+- name: Garantir que o módulo SSL está habilitado no Apache
+  community.general.apache2_module:
+    name: ssl
+    state: present
+  notify: Restart Apache
+  become: true
+  tags: [apache, ssl]
+
+# Cria diretórios SSL caso, não existir
+- name: Criar diretórios para certificados SSL se não existirem
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ cert_path }}"
+    - "{{ key_path }}"
+  tags: [apache, ssl]
+
+# Copia o arquivo de configuração do virtualhost SSL usando template Jinja2
+- name: Copiar configuração SSL para virtualhost Apache
+  ansible.builtin.template:
+    src: ssl.conf.j2
+    dest: "/etc/apache2/sites-available/{{ domain_name }}-ssl.conf"
+    mode: '0644'
+  notify: Restart Apache
+  become: true
+  tags: [apache, ssl]
+
+# Verifica se o virtualhost SSL já está habilitado
+- name: Verificar se virtualhost está habilitado
+  ansible.builtin.stat:
+    path: "/etc/apache2/sites-enabled/{{ domain_name }}-ssl.conf"
+  register: vhost_enabled
+  tags: [apache, ssl]
+
+# Ativa o virtualhost SSL apenas se ainda não estiver ativo
+- name: Ativar virtualhost SSL
+  ansible.builtin.command: a2ensite {{ domain_name }}-ssl
+  when: not vhost_enabled.stat.exists
+  register: a2ensite_result
+  notify: Restart Apache
+  changed_when: "'Enabling site' in a2ensite_result.stdout"
+  become: true
+  tags: [apache, ssl]
