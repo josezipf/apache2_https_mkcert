@@ -1,5 +1,5 @@
 galaxy_info:
-  role_name: apache-https
+  role_name: apache2-https
   author: josezipf
   description: Configura HTTPS para Apache com Mkcert
   company: ""
