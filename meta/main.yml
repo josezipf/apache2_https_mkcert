@@ -1,7 +1,7 @@
 galaxy_info:
-  role_name: zabbix_https_apache
+  role_name: apache2_https_ubuntu
   author: josezipf
-  description: Configura HTTPS para Apache com Zabbix proxy
+  description: Configura HTTPS para Apache com Mkcert
   company: ""
   license: MIT
   min_ansible_version: "2.9"
