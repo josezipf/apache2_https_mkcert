@@ -53,6 +53,15 @@
   become: true
   tags: [apache, ssl]
 
+# Ativa o módulo rewrite no Apache
+- name: Garantir que o módulo rewrite está habilitado no Apache
+  community.general.apache2_module:
+    name: rewrite
+    state: present
+  notify: Restart Apache
+  become: true
+  tags: [apache, rewrite]
+
 # Cria diretórios SSL caso, não existir
 - name: Criar diretórios para certificados SSL se não existirem
   ansible.builtin.file:
