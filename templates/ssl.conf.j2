@@ -11,4 +11,25 @@
 
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    # Configurações essenciais de segurança
+    <Directory "/usr/share/zabbix">
+        Options FollowSymLinks
+        AllowOverride None
+        Require all granted
+
+        # Bloqueio absoluto do arquivo de senhas
+        <FilesMatch "(?i)(top_passwords\.txt)$">
+            Require all denied
+            Order deny,allow
+            Deny from all
+            ErrorDocument 403 "Acesso proibido"
+        </FilesMatch>
+
+        # Redirecionamento para páginas não encontradas
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^ /zabbix/index.php [L,R=302]
+    </Directory>
 </VirtualHost>
